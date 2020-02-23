@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+# bluetooth # enable state
+
+# l-click toggle bluetooth (sudo bluetooth toggle)
+# r-click open bluetooth menu (i3-msg exec blueman-manager)
+
+from pydbus import SystemBus
+bus=SystemBus()
+
+def gen_string():
+  data=bus.get("org.bluez", "/")["org.freedesktop.DBus.ObjectManager"].GetManagedObjects()
+  if '/org/bluez/hci0' in data:
+    devices='|'.join(
+        [ data[x]['org.bluez.Device1']['Name'] + " (" + str(data[x].get('org.bluez.Battery1',{'Percentage':'-'})['Percentage']) + "%)"
+          for x in data if 'org.bluez.Device1' in data[x].keys() and data[x]['org.bluez.Device1']['Connected'] == True
+        ]
+      )
+    if len(devices) == 0:
+      print('on')
+    else:
+      print(devices)
+    print('on')
+    print('#FFF000')
+  else:
+    print('off')
+    print('off')
+    print('#586E75')
+
+gen_string()

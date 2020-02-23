@@ -1,0 +1,16 @@
+# /etc/systemd/system/suspend@.service
+# sudo systemctl enable suspend@$USER
+# run blurlock before suspending
+[Unit]
+Description=User suspend actions
+Before=sleep.target
+
+[Service]
+User=%I
+Type=forking
+Environment=DISPLAY=:0
+ExecStart=/usr/bin/blurlock
+ExecStartPost=/usr/bin/sleep 0.5
+
+[Install]
+WantedBy=sleep.target

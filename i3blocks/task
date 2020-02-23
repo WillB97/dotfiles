@@ -1,0 +1,36 @@
+#!/bin/sh
+
+function print_block {
+    task rc.report.foo.sort:urgency- \
+        rc.report.foo.columns:description \
+        rc.verbose=nothing \
+        foo status:pending limit:1 |
+        awk -v N=20 -v TYPE="$1" '{
+            print $0;
+            if(TYPE=="persist"){exit 0}
+            if(length>N){
+                print substr($0,1,N-3) "..."
+            }else{
+                print $0
+            };exit 0
+        }'
+}
+
+function process_click {
+    case "$1" in
+        1) notify-send "Overdue Tasks" "$(task +OVERDUE rc.report.next.columns:description \
+            rc.report.next.labels:desc rc.verbose=nothing next limit:10)";; # l-click task +TODAY list notification
+        3) notify-send "Next Tasks" "$(task rc.report.next.columns:description \
+            rc.report.next.labels:desc rc.verbose=nothing next limit:10)";; # r-click task next notification
+    esac
+}
+
+case "$1" in
+    "refresh") print_block persist;;
+    # "persist") (ls ~/.task/*.data |entr -r $0 refresh) &
+    #     while read BUTTON; do 
+    #         process_click $BUTTON;
+    #     done;;
+    *) process_click $BLOCK_BUTTON
+        print_block;;
+esac

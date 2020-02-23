@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+## setup
+# sudo chown root:wheel /sys/devices/platform/thinkpad_acpi/bluetooth_enable
+# sudo chmod g+w /sys/devices/platform/thinkpad_acpi/bluetooth_enable
+# ls -l /sys/devices/platform/thinkpad_acpi/bluetooth_enable
+# -rw-r--r-- 1 root wheel 4096 Jan  5 10:41 /sys/devices/platform/thinkpad_acpi/bluetooth_enable
+
+from pydbus import SystemBus
+from gi.repository import GLib
+from sys import stdin
+from os import system
+from time import sleep
+bus=SystemBus()
+
+def gen_string(a,b):
+  # if len(a.split('/')) not in [1,5]: # prevent flooding from all the services a device registers
+  #   return
+  data=bus.get("org.bluez", "/")["org.freedesktop.DBus.ObjectManager"].GetManagedObjects()
+  if '/org/bluez/hci0' in data:
+    devices='|'.join(
+        [ data[x]['org.bluez.Device1']['Name'] + " (" + str(data[x].get('org.bluez.Battery1',{'Percentage':'-'})['Percentage']) + "%)"
+          for x in data if 'org.bluez.Device1' in data[x].keys() and data[x]['org.bluez.Device1']['Connected'] == True
+        ]
+      )
+    if len(devices) == 0:
+      print('<span color="{}">{}</span>'.format('#FFF000','on'), flush=True)
+    else:
+      print('<span color="{}">{}</span>'.format('#FFF000',devices), flush=True)
+  else:
+    print('<span color="{}">{}</span>'.format('#586E75','off'), flush=True)
+
+gen_string('',{})
+bluez=bus.get('org.bluez','/')["org.freedesktop.DBus.ObjectManager"]
+bluez.InterfacesAdded.connect(gen_string)
+bluez.InterfacesRemoved.connect(gen_string)
+
+def handle_clicks(a,b):
+  BUTTON=a.readline()
+  if BUTTON == '1\n': # l-click toggle bluetooth
+    try:
+      state=0
+      with open('/sys/devices/platform/thinkpad_acpi/bluetooth_enable','r') as f:
+        state=int(f.read())
+      with open('/sys/devices/platform/thinkpad_acpi/bluetooth_enable','w') as f:
+        f.write(str(1-state))
+    except (PermissionError,IOError):
+      print('Toggle failed', flush=True)
+      sleep(2)
+      gen_string('',{})
+  elif BUTTON == '3\n': # r-click open bluetooth menu
+    system('i3-msg exec -q blueman-manager')
+  return True
+
+GLib.io_add_watch(stdin,GLib.IO_IN,handle_clicks)
+
+try:
+  GLib.MainLoop().run()
+except KeyboardInterrupt:
+  exit(0)

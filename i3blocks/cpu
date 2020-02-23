@@ -1,0 +1,44 @@
+#!/bin/bash
+
+usage() {
+    echo "  -H  High charge threshold"
+    echo "  -M  Medium charge threshold"
+    echo "  -L  Low charge threshold"
+    echo "  -h  High charge colour"
+    echo "  -m  Medium charge colour"
+    echo "  -l  Low charge colour"
+}
+
+while getopts ":H:M:L:h:m:l:i:" o; do
+    case "${o}" in
+        H)  high=${OPTARG};;
+        M)  med=${OPTARG};;
+        L)  low=${OPTARG};;
+        h)  Col_H=${OPTARG};;
+        m)  Col_M=${OPTARG};;
+        l)  Col_L=${OPTARG};;
+        *)  usage
+            exit 1;;
+    esac
+done
+
+echo " 00.0%"
+
+mpstat 2 | awk -v High="${high:-75}" -v Med="${med:-50}" \
+    -v Low="${low:-0}" -v Col_H="${Col_H:-#FF0000}" -v Col_M="${Col_M:-#FFFF00}" \
+    -v Col_L="${Col_L:-#FFFFFF}" \
+    '/[0.9]\./{
+        lvl=100-$12;
+        if(lvl >= High){
+            COL=Col_H
+        }else if(lvl >= Med){
+            COL=Col_M
+        }else if(lvl >= Low){
+            COL=Col_L
+        }else{
+            COL="#FFFFFF"
+        }
+        # print ICON FS lvl "%"
+        printf "<span color=\"%s\"> %04.1f%%</span>\n",COL,lvl
+        fflush()
+    }'

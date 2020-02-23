@@ -1,0 +1,38 @@
+#!/bin/bash
+
+usage() {
+    echo "  -I  On colour"
+    echo "  -O  Off colour"
+    echo "  -c  Caps icon"
+    echo "  -n  Num icon"
+    echo "  -s  Scroll icon"
+}
+
+while getopts ":I:O:c:n:s:" o; do
+    case "${o}" in
+        I)  On=${OPTARG};;
+        O)  Off=${OPTARG};;
+        c)  caps=${OPTARG};;
+        n)  num=${OPTARG};;
+        s)  scroll=${OPTARG};;
+        *)  usage
+            exit 1;;
+    esac
+done
+
+xset q | awk -v ON="${On:-#D6D62C}" -v OFF="${Off:-#586E75}" \
+    -v CAPS="${caps:-CAP}" -v NUM="${num:-NUM}" -v SCR="${scroll:-SCR}" '
+/^\s*00:/{
+    cap_state=$4
+    num_state=$8
+    scr_state=$12
+    text="<span color=\"" ((cap_state=="on")? ON : OFF ) "\">" CAPS " </span>"
+    if(cap_state=="on"){short_text="<span color=\"" ON "\">" CAPS " </span>";}
+    text=text "<span color=\"" ((num_state=="on")? ON : OFF ) "\">" NUM " </span>"
+    if(num_state=="on"){short_text=short_text "<span color=\"" ON "\">" NUM " </span>";}
+    text=text "<span color=\"" ((scr_state=="on")? ON : OFF ) "\">" SCR "</span>"
+    if(scr_state=="on"){short_text=short_text "<span color=\"" ON "\">" SCR "</span>";}
+    
+    print text
+    print short_text
+}'

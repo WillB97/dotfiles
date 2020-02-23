@@ -1,0 +1,8 @@
+#!/bin/bash
+
+awk '
+BEGIN{lvl=0;rpm=0} 
+/^level/ {lvl=$2}
+/^speed/ {rpm=$2}
+END{print FS rpm " RPM"}
+' /proc/acpi/ibm/fan

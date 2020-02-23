@@ -1,0 +1,56 @@
+#!/bin/bash
+# colours
+# l-click to disconnect
+# r-click for VPN menu
+
+active_vpn=( "$(nmcli -t connection show --active |awk -F':' '($3=="vpn"){print $1}')" )
+
+case "$BLOCK_BUTTON" in
+    3) # create VPN list
+        available_vpn="$(nmcli -t connection show |awk -F':' '($3=="vpn"){print $1}')"
+        # calculate indexes of active vpns in available
+        active_hi="$(awk -v active="$active_vpn" '
+            BEGIN {
+                if(active==""){exit 0};i=""
+            } (active ~ $0){
+                i=i NR-1 ","
+            } END {
+                print substr(i,1,length(i)-1)
+            }' <<< "$available_vpn")"
+        for new_vpn in "$(echo "$available_vpn" |rofi \
+				-dmenu -p vpn -no-custom \
+				-m -3 -width -25 -lines 10 -theme-str '#window {anchor:southeast; location: northwest;}' \
+			   	-u $active_hi)"; do
+            if [[ " ${active_vpn[@]} " =~ " ${new_vpn} " ]]; then
+                nmcli connection down "$new_vpn" >/dev/null 2>&1
+            else
+                nmcli connection up "$new_vpn" >/dev/null 2>&1
+            fi
+		done;;
+    2) # connect to prefered IPSec
+        nmcli connection up "${PREF_VPN:-House IPSec}" >/dev/null 2>&1
+;;
+    1) # close all$ active VPNs
+        for curr_vpn in "${active_vpn}"; do
+            nmcli connection down "$curr_vpn" >/dev/null 2>&1
+        done;;
+esac
+
+if [[ "${#active_vpn}" != "0" ]]; then
+	paste -s -d, <<< " ${active_vpn}"
+	echo " yes"
+	echo "#00FF00"
+else
+	echo " no"
+	echo " no"
+	echo "#586E75"
+fi
+# nmcli -t connection show --active |awk -F ':' '
+#     $3=="vpn"{vpn=vpn " " $1 ","}
+#     END{
+#         if(vpn!=""){
+#             print substr(vpn,1,length(vpn)-1)
+#         }else{
+#             print " no"
+#         }
+#     }'

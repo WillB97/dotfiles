@@ -1,0 +1,15 @@
+# /etc/systemd/system/resume@.service
+# sudo systemctl enable suspend@$USER
+# run xrandr on resume to switch to external displays when docked while closed
+[Unit]
+Description=Fix xrandr on resume
+After=suspend.target
+
+[Service]
+User=%I
+Type=simple
+Environment=DISPLAY=:0
+ExecStart=/usr/local/bin/xrandr_dock.sh 2> /dev/null
+
+[Install]
+WantedBy=suspend.target

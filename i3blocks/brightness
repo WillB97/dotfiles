@@ -1,0 +1,53 @@
+#!/bin/bash
+
+usage() {
+    echo "  -H  High brightness threshold"
+    echo "  -M  Medium brightness threshold"
+    echo "  -L  Low brightness threshold"
+    echo "  -h  High brightness colour"
+    echo "  -m  Medium brightness colour"
+    echo "  -l  Low brightness colour"
+}
+
+while getopts ":H:M:L:h:m:l:i:" o; do
+    case "${o}" in
+        H)  high=${OPTARG};;
+        M)  med=${OPTARG};;
+        L)  low=${OPTARG};;
+        h)  Col_H=${OPTARG};;
+        m)  Col_M=${OPTARG};;
+        l)  Col_L=${OPTARG};;
+        *)  usage
+            exit 1;;
+    esac
+done
+
+case "$BLOCK_BUTTON" in
+    3) lvl="$(rofi -dmenu -p "Brightness level" -width -25 -theme-str 'listview { enabled: false; }')" # rofi % input
+        if [ "$lvl" -le 100 -a "$lvl" -ge 0 ]; then # bound between 0 and 100
+            xbacklight -set $lvl -time 500
+        fi;;
+    4)  xbacklight -inc 5;;
+    5)  xbacklight -dec 5;;
+esac
+
+awk -v High="${high:-80}" -v Med="${med:-50}" \
+    -v Low="${low:-21}" -v Col_H="${Col_H:-#00FF00}" -v Col_M="${Col_M:-#FFFF00}" \
+    -v Col_L="${Col_L:-#586E75}" '
+    FILENAME~"/brightness"{now=$0}
+    FILENAME~"/max"{max=$0}
+    END{
+        lvl=now/max*100
+        printf " %.0f%%\n",lvl
+        printf " %.0f%%\n",lvl
+        if(lvl >= High){
+            print Col_H
+        }else if(lvl >= Med){
+            print Col_M
+        }else if(lvl <= Low){
+            print Col_L
+        }else{
+            print "#FFFFFF"
+        }
+    }
+' /sys/class/backlight/intel_backlight/brightness /sys/class/backlight/intel_backlight/max_brightness

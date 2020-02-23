@@ -1,0 +1,22 @@
+# Simple system-wide git-ignores
+# Shared
+*.db
+tags
+.session.vim
+.ackrc
+!bin
+
+# C
+*.o
+*.elf
+
+# OS X
+.DS_Store
+
+# Python
+__pycache__/
+.virtualenv/
+*.egg-info/
+
+# QT5
+*.qmlc

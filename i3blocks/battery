@@ -1,0 +1,97 @@
+#!/bin/bash
+
+usage() {
+    echo "  -H  High charge threshold"
+    echo "  -M  Medium charge threshold"
+    echo "  -L  Low charge threshold"
+    echo "  -h  High charge colour"
+    echo "  -m  Medium charge colour"
+    echo "  -l  Low charge colour"
+    echo "  -c  Charging colour"
+    echo "  -C  Charging icon"
+    echo "  -D  Discharge icon"
+    echo "  -F  Full icon"
+}
+
+case "$BLOCK_BUTTON" in
+    1) for bat in $(upower -e|grep BAT); do
+        status_text="$(upower -i $bat|awk -v PREV="$status_text" '
+        BEGIN{if(PREV!=""){print PREV}}
+        /path/{name=$2}
+        /vend/{vendor=$2}
+        /model/{model=$2}
+        /energy-r/{rate=$2 FS $3}
+        /energy:/{energy=$2 FS $3}
+        /percent/{percent=$2}
+        /cap/{capacity=$2}
+        END{printf "%s %s (%s)\n\tRate: %s\n\t%s (%s)\n\tCapacity: %s\n",
+            vendor,model,name,rate,percent,energy,capacity}
+        ')"
+    done
+    notify-send -i battery "Battery Status" "$status_text";;
+esac
+
+while getopts ":H:M:L:h:m:l:c:C:D:F:" o; do
+    case "${o}" in
+        H)  high=${OPTARG};;
+        M)  med=${OPTARG};;
+        L)  low=${OPTARG};;
+        h)  Col_H=${OPTARG};;
+        m)  Col_M=${OPTARG};;
+        l)  Col_L=${OPTARG};;
+        c)  Col_chg=${OPTARG};;
+        C)  CH_icon=${OPTARG};;
+        D)  DIS_icon=${OPTARG};;
+        F)  FULL_icon=${OPTARG};;
+        *)  usage
+            exit 1;;
+    esac
+done
+
+awk -F= -v High="${high:-95}" -v Med="${med:-30}" -v Low="${low:-20}" -v Col_H="${Col_H:-#00FF00}" \
+    -v Col_M="${Col_M:-#FF9E00}" -v Col_L="${Col_L:-#FF0000}" -v Col_chg="${Col_chg:-#FFFF00}" \
+    -v CH_icon="${CH_icon:-C}" -v DIS_icon="${DIS_icon:-D}" -v FULL_icon="${FULL_icon:-F}" '
+/ENERGY_NOW/{now+=$2}
+/ENERGY_FULL=/{full+=$2}
+/POWER_NOW/{power+=$2}
+/STATUS/{
+    if($2=="Discharging"){
+        charge=0
+    }else if($2=="Charging"){
+        charge=1
+    }else{
+        if(charge == "" && $2=="Full"){
+            charge=2
+        }
+    }}
+END{
+    if(power==0){
+        rate=0
+    }else{
+        if(charge==1){
+            rate=(full-now)/power
+        }else{
+            rate=now/power
+        }
+    }
+    lvl=now/full*100
+    printf "%s%.0f%% (%i:%02i)\n",
+        (charge > 0) ? ((charge==1) ? CH_icon : FULL_icon ) : DIS_icon,
+        lvl,
+        int(rate),
+        int((rate-int(rate))*60)
+    printf "%s%.0f%%\n",
+        (charge > 0) ? ((charge==1) ? CH_icon : FULL_icon ) : DIS_icon,
+        lvl
+    if(charge==1){
+        print Col_chg
+    }else if(lvl >= High){
+        print Col_H
+    }else if(lvl <= Low){
+        print Col_L
+    }else if(lvl <= Med){
+        print Col_M
+    }else{
+        print "#FFFFFF"
+    }
+}' /sys/class/power_supply/BAT*/uevent

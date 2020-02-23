@@ -1,0 +1,108 @@
+#!/bin/bash
+# l-click toggle wifi
+# r-click open wifi menu
+
+usage() {
+    echo "  -H  High charge threshold"
+    echo "  -M  Medium charge threshold"
+    echo "  -L  Low charge threshold"
+    echo "  -h  High charge colour"
+    echo "  -m  Medium charge colour"
+    echo "  -l  Low charge colour"
+	echo "  -E  Ethernet icon"
+}
+
+high=90
+med=50
+low=30
+Col_H="#00FF00"
+Col_M="#FFFF00"
+Col_L="#FF0000"
+
+while getopts ":H:M:L:h:m:l:E:" o; do
+    case "${o}" in
+        H)  high=${OPTARG};;
+        M)  med=${OPTARG};;
+        L)  low=${OPTARG};;
+        h)  Col_H=${OPTARG};;
+        m)  Col_M=${OPTARG};;
+        l)  Col_L=${OPTARG};;
+		E)  Eth_icon=${OPTARG};;
+        *)  usage
+            exit 1;;
+    esac
+done
+
+for name in INTERFACE PERCENT; do
+    read $name
+done < <(awk '/^w/{print substr($1,1,length($1)-1);
+    print int($3*100/70);exit 0}' /proc/net/wireless) # interface & signal percent
+
+for name in SSID SIGNAL SPEED; do
+    read $name
+done < <(iw dev wlp58s0 link|
+    awk '/SSID:/{print $2}
+        /signal:/{print $2 $3}
+        /tx bitrate:/{print $3 $4}') # SSID, signal, bitrate
+
+print_status() {
+    status_text=""
+    for iface_path in /sys/class/net/*; do
+        iface=${iface_path##*/}
+        if [[ "$iface" =~ ^(lo|g) ]]||[ "$(</sys/class/net/$iface/operstate)" = "down" ];then continue;fi
+        # {ifname} {ipv4} {ipv6} {mac}
+        status_text="$(ip addr show $iface |awk -v IFACE="$iface" -v PREV="$status_text" '
+        BEGIN{if(PREV!=""){print PREV};print IFACE}
+        /inet /{print "\tIPv4: " $2}
+        /inet6/{print "\tIPv6: " $2}
+        $1~/link/{print "\tMAC: " $2}')"
+        if [[ "$iface" =~ ^w ]]; then # {ssid} {signal} {freq}
+            status_text="$(iw dev $iface link|awk -v PREV="$status_text" '
+            BEGIN{if(PREV!=""){print PREV}}
+            /SSID:/{SSID=$2}
+            /freq:/{freq=$2}
+            /signal:/{signal=$2 FS $3}
+            END{printf"\t%s, %s, %.1f GHz\n",SSID,signal,freq/1000}')"
+        fi
+    done
+    status_text="$(echo "$status_text";
+    curl -s ifconfig.co/json|
+    jq -r '(["Public IP: ",.ip]|join("")),
+    (["\t",.city,", ",.country_iso]|join("")),
+    (["\t",.asn_org]|join(""))')"
+    # status_text="$(echo "$status_text";
+    # echo -n 'Public IP: '
+    # curl -s ifconfig.co/ip)"
+    notify-send -i network-wireless-symbolic "Network Status" "$status_text"
+}
+
+case "$BLOCK_BUTTON" in
+    1) ;;
+    2) print_status;;
+    3) ;;
+esac
+
+for iface_path in /sys/class/net/*; do
+	iface=${iface_path##*/}
+	if [[ "$iface" =~ ^(lo|g|w) ]]; then continue; fi
+	if [ "$(</sys/class/net/$iface/operstate)" = "up" ]; then
+		echo -n " ${Eth_icon:-E} "
+	fi
+done
+
+if [[ $(grep -c ^w /proc/net/wireless) == "0" ]]; then
+	echo ' down'
+	echo ' down'
+    echo "#586E75"
+	exit 0
+fi
+
+echo "$SPEED $PERCENT% $SSID"
+echo "$SSID"
+if [ $PERCENT -ge $high ]; then
+    echo "$Col_H"
+elif [ $PERCENT -lt $low ]; then
+    echo "$Col_L"
+elif [ $PERCENT -le $med ]; then
+    echo "$Col_M"
+fi

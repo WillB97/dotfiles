@@ -1,0 +1,45 @@
+#!/bin/bash
+
+usage() {
+    echo "  -H  High charge threshold"
+    echo "  -M  Medium charge threshold"
+    echo "  -L  Low charge threshold"
+    echo "  -h  High charge colour"
+    echo "  -m  Medium charge colour"
+    echo "  -l  Low charge colour"
+    echo "  -i  Icon"
+}
+
+while getopts ":H:M:L:h:m:l:i:" o; do
+    case "${o}" in
+        H)  high=${OPTARG};;
+        M)  med=${OPTARG};;
+        L)  low=${OPTARG};;
+        h)  Col_H=${OPTARG};;
+        m)  Col_M=${OPTARG};;
+        l)  Col_L=${OPTARG};;
+        *)  usage
+            exit 1;;
+    esac
+done
+
+sensors |
+    awk -v High="${high:-65}" -v Med="${med:-50}" \
+    -v Low="${low:-25}" -v Col_H="${Col_H:-#FF0000}" -v Col_M="${Col_M:-#FFFF00}" \
+    -v Col_L="${Col_L:-#00FF00}" \
+    '/Package/ {
+        match($0,/:\s*[+-]([0-9.]+.C)/,a)
+        print FS a[1]
+        print a[1]
+        match(a[1],/([0-9.]+)/,lvls)
+        lvl=lvls[1]
+        if(lvl >= High){
+            print Col_H
+        }else if(lvl >= Med){
+            print Col_M
+        }else if(lvl >= Low){
+            print Col_L
+        }else{
+            print "#FFFFFF"
+        }
+    }'
