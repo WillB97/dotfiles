@@ -24,12 +24,12 @@ symlink the config files from this repo to their places on the system
 Downloads plugins into .vim folder
 
 ### Eduroam settings for network manager
-SSID: eduroam
-Security: WPA2-Enterprise
-Authentication: TTLS
-Anonymous identity: @<domain>
-Domain: <domain>
-No CA certificate is required
-Inner Authenication: MSCHAPv2 (no EAP)
-Username: <username>@<domain>
-Password: <password>
+    SSID: eduroam
+    Security: WPA2-Enterprise
+    Authentication: TTLS
+    Anonymous identity: @<domain>
+    Domain: <domain>
+    No CA certificate is required
+    Inner Authenication: MSCHAPv2 (no EAP)
+    Username: <username>@<domain>
+    Password: <password>
