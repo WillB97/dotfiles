@@ -8,4 +8,6 @@
 /lost+found
 /home/*/.cache
 /home/*/.local/share/Trash
+/home/*/.config/google-chrome/Default/Service\ Worker/CacheStorage
+/home/*/.config/google-chrome/Default/Application\ Cache
 *.raw
