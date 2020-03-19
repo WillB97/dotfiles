@@ -18,7 +18,7 @@ function backup_and_link() {
 	else
 		echo "Linking $1 out to $2"
 		if [[ -d "$2" ]] || [[ -f "$2" ]]; then # if file or folder exists
-			mv "${2%/}" "${2%/}.old" # move to .old
+			${ELEV} mv "${2%/}" "${2%/}.old" # move to .old
 		else
 			${ELEV} mkdir -p "$(dirname $2)"
 		fi
@@ -32,7 +32,7 @@ function sudo_replace() {
 	else
 		echo "Copying $1 to $2"
 		if [[ -d "$2" ]] || [[ -f "$2" ]]; then # if file or folder exists
-			mv "${2%/}" "${2%/}.old" # move to .old
+			${ELEV} mv "${2%/}" "${2%/}.old" # move to .old
 		else
 			${ELEV} mkdir -p "$(dirname $2)"
 		fi
