@@ -8,13 +8,15 @@
 " {{{ PATHOGEN SETUP
 filetype plugin indent on
 set omnifunc=syntaxcomplete#Complete
-if !isdirectory("~/.vim/autoload")
+if isdirectory(expand("~/.vim/autoload"))
 	execute pathogen#infect()
 	execute pathogen#helptags()
 	" hide gitignore'd files
 	let g:netrw_list_hide=netrw_gitignore#Hide()
 	" hide dotfiles by default (this is the string toggled by netrw-gh)
 	let g:netrw_list_hide.=',\(^\|\s\s\)\zs\.\S\+'
+    " don't hide the mode if airline is not being used
+    set noshowmode
 endif
 " }}}
 
@@ -22,7 +24,6 @@ endif
 " vim-airline
 let g:airline_powerline_fonts = 1
 set ttimeoutlen=10
-set noshowmode
 " Fix URxvt unicode issues
 " let g:airline_symbols = {'space': ' ', 'paste': 'PASTE', 'maxlinenr': ' ¶'}
 " let g:airline_symbols.notexists = 'Ɇ'
@@ -64,7 +65,9 @@ let g:is_bash=1
 " General pleasantries
 set confirm
 inoremap <S-Tab> <c-n> " Shift-tab for completion
-set mouse=a            " enable mouse support
+if has('mouse') " avoid errors when git uses a basic vim
+    set mouse=a        " enable mouse support
+endif
 set ruler              " show the cursor position all the time
 set showcmd            " display incomplete command
 set laststatus=2       " Always display the status line
@@ -103,7 +106,9 @@ set complete+=d,kspell " complete with defined names and macros from included or
 " Formatting
 set nowrap
 set tabstop=4 shiftwidth=4 softtabstop=4
-set foldlevelstart=2
+if has('folding') " avoid errors when git uses a basic vim
+    set foldlevelstart=2
+endif
 set list listchars=tab:» ,trail:·,nbsp:·,extends:#
 
 " Session saving
@@ -147,7 +152,7 @@ augroup MyCmds
 	" Tabstop/Shiftwidth
 	au FileType mustache,ruby,eruby,javascript,coffee,sass,scss setl softtabstop=2 shiftwidth=2 tabstop=2
 	au FileType rst setl softtabstop=3 shiftwidth=3 tabstop=3
-	au FileType systemverilog softtabstop=2 shiftwidth=2 tabstop=2 expandtab
+	au FileType systemverilog setl softtabstop=2 shiftwidth=2 tabstop=2 expandtab
 
 	" Other
 	au FileType python let b:python_highlight_all=1
@@ -155,12 +160,19 @@ augroup MyCmds
 	au FileType markdown setl linebreak spell
 	au FileType markdown call MarkDownEquations()
 	au FileType gitcommit setl textwidth=100 spell " Automatically wrap at 100 characters and spell check git commit messages
-	au BufRead,BufNewFile *.md set filetype=markdown
+	au BufRead,BufNewFile *.md setl filetype=markdown
+    au VimEnter * call SetupFileBrowser()
 augroup END
 
 " Key Mappings {{{
 set pastetoggle=<F2>
-nnoremap <F3> :Lexplore                               " toggle netrw browser to left
+function! SetupFileBrowser() " this needs to be called after plugins have loaded
+    if exists(":Lexplore")
+        nnoremap <F3> :Lexplore<CR> " toggle netrw browser to left
+    else
+        nnoremap <F3> :Vexplore<CR> " toggle netrw browser to left
+    endif
+endfunction
 nnoremap <F4> :retab<CR>:%s/\s\+$//e<CR><C-o>         " fix whitespace
 nnoremap <F5> :syn sync fromstart<CR>                 " fix syntax highlighting
 nnoremap <F6> "=strftime("%-l:%M%p")<CR>P             " Insert timestamp
@@ -200,7 +212,7 @@ command! MakeTags !ctags -R .
 
 " Typing MathJax is effort
 function! MarkDownEquations()
-    imap <tab>eq \\(\\)<C-o>T(
-    imap <tab>fr {\over}<C-o>T{
-    imap <tab>` <C-o>f}<space>
+    inoremap <tab>eq \\(\\)<C-o>T(
+    inoremap <tab>fr {\over}<C-o>T{
+    inoremap <tab>` <C-o>f}<space>
 endfunction
