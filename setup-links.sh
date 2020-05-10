@@ -46,7 +46,9 @@ backup_and_link gitignore ~/.gitignore
 backup_and_link gitmessage ~/.gitmessage
 backup_and_link taskrc ~/.taskrc
 backup_and_link tmux.conf ~/.tmux.conf
-backup_and_link zsh-plugins/ ~/.oh-my-zsh/custom/
+backup_and_link zsh-plugins/themes/pureness.zsh-theme ~/.oh-my-zsh/custom/themes/
+backup_and_link zsh-plugins/plugins/custom-aliases/ ~/.oh-my-zsh/custom/plugins/
+backup_and_link zsh-plugins/plugins/os-config/ ~/.oh-my-zsh/custom/plugins/
 backup_and_link vimrc ~/.vimrc
 backup_and_link zshrc ~/.zshrc
 
