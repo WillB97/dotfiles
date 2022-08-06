@@ -10,4 +10,12 @@
 /home/*/.local/share/Trash
 /home/*/.config/google-chrome/Default/Service\ Worker/CacheStorage
 /home/*/.config/google-chrome/Default/Application\ Cache
+/home/*/.config/chromium/Default/Service\ Worker/CacheStorage
+/home/*/.config/chromium/Default/Application\ Cache
+/home/*/.config/Code/Cache
+.browse.VC.db
+/var/cache
+/var/tmp
 *.raw
+/home/*/vmware
+/home/will/temp

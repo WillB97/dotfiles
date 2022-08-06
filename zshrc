@@ -35,7 +35,7 @@ if [[ `uname 2> /dev/null` == "Darwin" ]]; then # mac
 	plugins+=() # mac plugins
 elif [[ `uname -r 2> /dev/null` =~ "Microsoft" ]]; then # wsl
 	plugins+=() # wsl plugins
-elif ! [[ `uname -a 2> /dev/null` =~ "Android|Microsoft|Darwin" ]] && 
+elif ! [[ `uname -a 2> /dev/null` =~ "Android|Microsoft|Darwin" ]] &&
 	[[ `uname 2> /dev/null` == "Linux" ]]; then # Linux
 	plugins+=( docker systemd fd ) # linux plugins
 fi
@@ -53,5 +53,9 @@ alias scpp="scp -i ~/.ssh/MusicBot -o StrictHostKeyChecking=no -o UserKnownHosts
 export DEFAULT_USER='will'
 
 [ -d ~/esp/esp-idf ] && export IDF_PATH=~/esp/esp-idf
+if [ -d ~/work/Projects/pico/sdk ]; then
+  export PICO_SDK_PATH=~/work/Projects/pico/sdk/pico-sdk
+  export PICO_EXTRAS_PATH=~/work/Projects/pico/sdk/pico-extras
+fi
 
-cdpath=(. $HOME/work/uni/yr4/)
+cdpath=(. $HOME/work/Projects/)

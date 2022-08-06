@@ -14,6 +14,8 @@ alias -g LL="2>&1 | less"
 alias -g CA="2>&1 | cat -A"
 alias -g NE="2> /dev/null"
 alias -g NUL="> /dev/null 2>&1"
+alias -g Q="|head -n1|qrencode -t utf8|awk 'NR==1{print \"\x1B[?1049h\"} {print} END{print \"\n\npress any key to continue\"}' - ; read -k1 -s ; echo -e '\e[?1049l'"
+alias -g W='| wc -l'
 
 # generate various character lists
 alias alpha="echo {A..Z} {a..z} | tr -d ' '"

@@ -15,7 +15,7 @@ load-module module-augment-properties
 
 ### Should be after module-*-restore but before module-*-detect
 load-module module-switch-on-port-available
-load-module module-switch-on-connect
+load-module module-switch-on-connect # blacklist=""
 
 ### Automatically load driver modules depending on the hardware available
 .ifexists module-udev-detect.so

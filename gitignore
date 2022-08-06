@@ -1,6 +1,6 @@
 # Simple system-wide git-ignores
 # Shared
-*.db
+# *.db
 tags
 .session.vim
 .ackrc
@@ -20,3 +20,6 @@ __pycache__/
 
 # QT5
 *.qmlc
+
+# vscode
+.vscode

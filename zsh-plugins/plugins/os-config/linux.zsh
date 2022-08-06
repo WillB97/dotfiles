@@ -49,7 +49,7 @@ function yt-vlc() {
 	i3-msg -q exec "~/.bin/yt-vlc-worker $1"
 }
 
-alias kb="xinput | grep -E 'OBINLB|AnnePro2.*Keyboard'|sed 's/^.*id=\([0-9]*\).*$/\1/'|xargs -I% sh -c \"setxkbmap -device % us\""
+alias kb="xinput | grep -E 'OBINLB|AnnePro2.*'|sed 's/^.*id=\([0-9]*\).*$/\1/'|xargs -I% sh -c \"setxkbmap -device % us\""
 
 # list out os specific aliases
 function os_help () {
